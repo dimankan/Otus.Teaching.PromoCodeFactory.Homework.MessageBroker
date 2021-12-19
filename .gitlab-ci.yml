@@ -12,7 +12,7 @@ build_Web.HttpAggregator_prj_job:
     rules:   
       - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
         changes:
-        - ./src/Otus.Teaching.Pcf.ReceivingFromPartner/Otus.Teaching.Pcf.ReceivingFromPartner.WebHost/**/*
+        - './src/Otus.Teaching.Pcf.ReceivingFromPartner/Otus.Teaching.Pcf.ReceivingFromPartner.WebHost/**/*'
     artifacts:
         paths:
         - content
