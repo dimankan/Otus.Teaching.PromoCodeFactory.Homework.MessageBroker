@@ -10,7 +10,7 @@ build_Web.HttpAggregator_prj_job:
     script:
         - dotnet build $CHECK_PROJECT -c Release -o content
     rules:   
-      - if: '$CI_MERGE_REQUEST_TARGET_BRANCH_NAME == "main"'
+      - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
         changes:
         - ./src/Otus.Teaching.Pcf.ReceivingFromPartner/Otus.Teaching.Pcf.ReceivingFromPartner.WebHost/**/*
     artifacts:
