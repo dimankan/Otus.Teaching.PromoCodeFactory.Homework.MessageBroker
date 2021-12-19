@@ -1,8 +1,10 @@
-﻿using System;
+﻿using Otus.Teaching.Pcf.ReceivingFromPartner.Core.Domain;
+using Otus.Teaching.Pcf.ReceivingFromPartner.Integration.Messages;
+using System;
 
 namespace Otus.Teaching.Pcf.ReceivingFromPartner.Integration.Dto
 {
-    public class GivePromoCodeToCustomerDto
+    public class GivePromoCodeToCustomerDto : IRabbitMqMessage
     {
         public string ServiceInfo { get; set; }
 
@@ -19,5 +21,19 @@ namespace Otus.Teaching.Pcf.ReceivingFromPartner.Integration.Dto
         public string EndDate { get; set; }
         
         public Guid? PartnerManagerId { get; set; }
+
+        public GivePromoCodeToCustomerDto(PromoCode promoCode)
+        {
+            PartnerId = promoCode.Partner.Id;
+            BeginDate = promoCode.BeginDate.ToShortDateString();
+            EndDate = promoCode.EndDate.ToShortDateString();
+            PreferenceId = promoCode.PreferenceId;
+            PromoCode = promoCode.Code;
+            ServiceInfo = promoCode.ServiceInfo;
+            PartnerManagerId = promoCode.PartnerManagerId;
+            PromoCodeId = promoCode.Id;
+        }
+
+        public GivePromoCodeToCustomerDto(){ }
     }
 }

@@ -17,7 +17,7 @@ using Otus.Teaching.Pcf.GivingToCustomer.WebHost.Models;
             promocode.PartnerId = request.PartnerId;
             promocode.Code = request.PromoCode;
             promocode.ServiceInfo = request.ServiceInfo;
-           
+            
             promocode.BeginDate = DateTime.Parse(request.BeginDate);
             promocode.EndDate = DateTime.Parse(request.EndDate);
 

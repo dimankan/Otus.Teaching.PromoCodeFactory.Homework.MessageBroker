@@ -17,6 +17,11 @@ using Otus.Teaching.Pcf.GivingToCustomer.DataAccess.Data;
 using Otus.Teaching.Pcf.GivingToCustomer.DataAccess.Repositories;
 using Otus.Teaching.Pcf.GivingToCustomer.Integration;
 using IConfiguration = Microsoft.Extensions.Configuration.IConfiguration;
+using Otus.Teaching.Pcf.GivingToCustomer.Integration.RabbitMQ.Configuration;
+using Otus.Teaching.Pcf.GivingToCustomer.WebHost.EntityServices.PromoCodeServices;
+using Otus.Teaching.Pcf.GivingToCustomer.Integration.RabbitMQ.Consumers;
+using Otus.Teaching.Pcf.GivingToCustomer.Integration.Messages;
+using Otus.Teaching.Pcf.GivingToCustomer.Integration.EntityServices.MessageServices;
 
 namespace Otus.Teaching.Pcf.GivingToCustomer.WebHost
 {
@@ -45,6 +50,19 @@ namespace Otus.Teaching.Pcf.GivingToCustomer.WebHost
                 x.UseSnakeCaseNamingConvention();
                 x.UseLazyLoadingProxies();
             });
+
+            services.Configure<RabbitMqConfig>(setup =>
+            {
+                setup.Host = Configuration["RabbitMq:Host"];
+                setup.UserName = Configuration["RabbitMq:UserName"];
+                setup.Password = Configuration["RabbitMq:Password"];
+                setup.QueueName = Configuration["GivingCustomerPromoCodeQueue"];
+            });
+
+            services.AddScoped<IRabbitMqMsgService, PromoCodeService>();
+            services.AddScoped<IPromoCodeService, PromoCodeService>();
+
+            services.AddHostedService<RabbitMqNotificationConsumer<GivePromoCodeMessage>>();
 
             services.AddOpenApiDocument(options =>
             {
