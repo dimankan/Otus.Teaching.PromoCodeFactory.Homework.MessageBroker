@@ -9,11 +9,10 @@ build_Web.HttpAggregator_prj_job:
     image: mcr.microsoft.com/dotnet/sdk:6.0
     script:
         - dotnet build $CHECK_PROJECT -c Release -o content
-    only:
-        refs:
-        - CI_Branch
+    rules:   
+      - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
         changes:
-        - './src/Otus.Teaching.Pcf.ReceivingFromPartner/Otus.Teaching.Pcf.ReceivingFromPartner.WebHost/**/*'
+        - ./src/Otus.Teaching.Pcf.ReceivingFromPartner/Otus.Teaching.Pcf.ReceivingFromPartner.WebHost/**/*
     artifacts:
         paths:
         - content
