@@ -39,7 +39,7 @@ namespace Otus.Teaching.Pcf.ReceivingFromPartner.DataAccess.Data
                     {
                         Id = Guid.Parse("e00633a5-978a-420e-a7d6-3e1dab116393"),
                         CreateDate = new DateTime(2020,07,9),
-                        EndDate = new DateTime(2020,10,9),
+                        EndDate = new DateTime(2021,12,9),
                         Limit = 100 
                     }
                 }
@@ -55,15 +55,14 @@ namespace Otus.Teaching.Pcf.ReceivingFromPartner.DataAccess.Data
                     {
                         Id = Guid.Parse("c9bef066-3c5a-4e5d-9cff-bd54479f075e"),
                         CreateDate = new DateTime(2020,05,3),
-                        EndDate = new DateTime(2020,10,15),
-                        CancelDate = new DateTime(2020,06,16),
+                        EndDate = new DateTime(2021,12,15),
                         Limit = 1000 
                     },
                     new PartnerPromoCodeLimit()
                     {
                         Id = Guid.Parse("0e94624b-1ff9-430e-ba8d-ef1e3b77f2d5"),
                         CreateDate = new DateTime(2020,05,3),
-                        EndDate = new DateTime(2020,10,15),
+                        EndDate = new DateTime(2021,12,15),
                         Limit = 100 
                     },
                 }
@@ -78,7 +77,7 @@ namespace Otus.Teaching.Pcf.ReceivingFromPartner.DataAccess.Data
                     new PartnerPromoCodeLimit()
                     {
                         Id = Guid.Parse("0691bb24-5fd9-4a52-a11c-34bb8bc9364e"),
-                        CreateDate = new DateTime(2020,07,3),
+                        CreateDate = new DateTime(2021,10,3),
                         EndDate = DateTime.Now.AddMonths(1),
                         Limit = 100 
                     }
@@ -94,7 +93,7 @@ namespace Otus.Teaching.Pcf.ReceivingFromPartner.DataAccess.Data
                     new PartnerPromoCodeLimit()
                     {
                         Id = Guid.Parse("93f3a79d-e9f9-47e6-98bb-1f618db43230"),
-                        CreateDate = new DateTime(2020,09,6),
+                        CreateDate = new DateTime(2021,10,6),
                         EndDate = DateTime.Now.AddMonths(1),
                         Limit = 15 
                     }

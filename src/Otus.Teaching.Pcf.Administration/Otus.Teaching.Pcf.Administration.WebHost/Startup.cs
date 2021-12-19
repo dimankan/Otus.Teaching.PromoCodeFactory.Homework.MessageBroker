@@ -14,8 +14,12 @@ using Otus.Teaching.Pcf.Administration.Core.Abstractions.Repositories;
 using Otus.Teaching.Pcf.Administration.DataAccess;
 using Otus.Teaching.Pcf.Administration.DataAccess.Data;
 using Otus.Teaching.Pcf.Administration.DataAccess.Repositories;
-using Otus.Teaching.Pcf.Administration.Core.Domain.Administration;
 using IConfiguration = Microsoft.Extensions.Configuration.IConfiguration;
+using Otus.Teaching.Pcf.Administration.Integration.RabbitMQ.Configuration;
+using Otus.Teaching.Pcf.Administration.Integration.RabbitMQ.Consumers;
+using Otus.Teaching.Pcf.Administration.Integration.EntityServices.EmployeeServices;
+using Otus.Teaching.Pcf.Administration.Integration.Messages;
+using Otus.Teaching.Pcf.Administration.Integration.Messages.MessageServices;
 
 namespace Otus.Teaching.Pcf.Administration.WebHost
 {
@@ -44,11 +48,25 @@ namespace Otus.Teaching.Pcf.Administration.WebHost
                 x.UseLazyLoadingProxies();
             });
 
+            services.Configure<RabbitMqConfig>(setup =>
+            {
+                setup.Host = Configuration["RabbitMq:Host"];
+                setup.UserName = Configuration["RabbitMq:UserName"];
+                setup.Password = Configuration["RabbitMq:Password"];
+                setup.QueueName = Configuration["PartnerManagerPromoCodeAdminNotificationQueue"];
+            });
+
+            services.AddScoped<IRabbitMqMsgService, EmployeeService>();
+            services.AddScoped<IEmployeeService, EmployeeService>();
+
+            services.AddHostedService<RabbitMqNotificationConsumer<PromoCodeNotificationMessage>>();
+
             services.AddOpenApiDocument(options =>
             {
                 options.Title = "PromoCode Factory Administration API Doc";
                 options.Version = "1.0";
             });
+            
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.

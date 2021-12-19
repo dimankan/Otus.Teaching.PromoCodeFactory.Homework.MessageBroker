@@ -11,6 +11,7 @@ services:
       - "ConnectionStrings:PromocodeFactoryAdministrationDb=Host=promocode-factory-administration-db;Database=promocode_factory_administration_db;Username=postgres;Password=docker"          
     depends_on: 
       - promocode-factory-administration-db
+      - rabbitmq
   #Administration Db
   promocode-factory-administration-db:
     image: "postgres:9.6.17"
@@ -64,3 +65,14 @@ services:
       - 5435:5432
     environment: 
       - POSTGRES_PASSWORD=docker
+  #RabbitMQ
+  rabbitmq:
+    image: rabbitmq:3-management
+    container_name: 'rabbitmq'
+    restart: always
+    ports:
+        - 5672:5672
+        - 15672:15672
+    environment:
+        - RABBITMQ_DEFAULT_USER=otus
+        - RABBITMQ_DEFAULT_PASS=password1!

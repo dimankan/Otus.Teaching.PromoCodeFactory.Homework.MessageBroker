@@ -3,6 +3,8 @@ using System.Threading.Tasks;
 using FluentAssertions;
 using Otus.Teaching.Pcf.Administration.Core.Domain.Administration;
 using Otus.Teaching.Pcf.Administration.DataAccess.Repositories;
+using Otus.Teaching.Pcf.Administration.Integration.EntityServices.EmployeeServices;
+using Otus.Teaching.Pcf.Administration.Integration.RabbitMQ.Abstractions;
 using Otus.Teaching.Pcf.Administration.WebHost.Controllers;
 using Xunit;
 
@@ -13,13 +15,15 @@ namespace Otus.Teaching.Pcf.Administration.IntegrationTests.Components.WebHost.C
     {
         private EfRepository<Employee> _employeesRepository;
         private EmployeesController _employeesController;
+        private IEmployeeService _employeeService;
 
         public EmployeesControllerTests(EfDatabaseFixture efDatabaseFixture)
         {
             _employeesRepository = new EfRepository<Employee>(efDatabaseFixture.DbContext);
-            _employeesController = new EmployeesController(_employeesRepository);
+            _employeeService = new EmployeeService(_employeesRepository);
+            _employeesController = new EmployeesController(_employeesRepository, _employeeService);
         }
-
+        
         [Fact]
         public async Task GetEmployeeByIdAsync_ExistedEmployee_ExpectedId()
         {
@@ -32,5 +36,6 @@ namespace Otus.Teaching.Pcf.Administration.IntegrationTests.Components.WebHost.C
             //Assert
             result.Value.Id.Should().Be(expectedEmployeeId);
         }
+       
     }
 }
