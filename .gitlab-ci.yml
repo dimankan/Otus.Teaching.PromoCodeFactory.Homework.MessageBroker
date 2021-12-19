@@ -10,7 +10,7 @@ build_Web.HttpAggregator_prj_job:
     script:
         - dotnet build $CHECK_PROJECT -c Release -o content
     rules:   
-      - if: $CI_MERGE_REQUEST_TARGET_BRANCH_NAME == 'CheckCICD'
+      - if: '$CI_MERGE_REQUEST_TARGET_BRANCH_NAME == "CheckCICD"'
         changes:
         - ./src/Otus.Teaching.Pcf.ReceivingFromPartner/Otus.Teaching.Pcf.ReceivingFromPartner.WebHost/**/*
     artifacts:
