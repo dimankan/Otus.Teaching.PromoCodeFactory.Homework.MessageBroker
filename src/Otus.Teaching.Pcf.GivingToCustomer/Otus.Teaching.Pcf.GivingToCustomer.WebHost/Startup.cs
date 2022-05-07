@@ -17,6 +17,9 @@ using Otus.Teaching.Pcf.GivingToCustomer.DataAccess.Data;
 using Otus.Teaching.Pcf.GivingToCustomer.DataAccess.Repositories;
 using Otus.Teaching.Pcf.GivingToCustomer.Integration;
 using IConfiguration = Microsoft.Extensions.Configuration.IConfiguration;
+using MassTransit;
+using Otus.Teaching.Pcf.GivingToCustomer.WebHost.Services;
+using Otus.Teaching.Pcf.GivingToCustomer.WebHost.Consumers;
 
 namespace Otus.Teaching.Pcf.GivingToCustomer.WebHost
 {
@@ -50,6 +53,37 @@ namespace Otus.Teaching.Pcf.GivingToCustomer.WebHost
             {
                 options.Title = "PromoCode Factory Giving To Customer API Doc";
                 options.Version = "1.0";
+            });
+            services.AddScoped<IPromoCodeService, PromoCodeService>();
+            services.AddMassTransit(x =>
+            {
+                x.AddConsumer<GivePromoCodesToCustomersConsumer>();
+                x.UsingRabbitMq((context, cfg) =>
+                {
+                    cfg.Host(Configuration.GetValue<string>("RabbitMQ:RabbitMqHost"), "/",
+                        h =>
+                        {
+                            h.Username(Configuration.GetValue<string>("RabbitMQ:RabbitMqHostSettings:UserName"));
+                            h.Password(Configuration.GetValue<string>("RabbitMQ:RabbitMqHostSettings:Password"));
+                        }
+                );
+                    cfg.ReceiveEndpoint(Configuration.GetValue<string>("RabbitMQ:Queues:PromoCodeToCustomerGateway"), e =>
+                    {
+                        e.UseMessageRetry(r =>
+                        {
+                            r.Incremental(5, TimeSpan.FromSeconds(10), TimeSpan.FromSeconds(20));
+                        });
+                        e.ConfigureConsumer<GivePromoCodesToCustomersConsumer>(context);
+                    });
+
+                });
+
+            });
+            services.AddOptions<MassTransitHostOptions>().Configure(options =>
+            {
+                options.WaitUntilStarted = true;
+                options.StartTimeout = TimeSpan.FromSeconds(10);
+                options.StopTimeout = TimeSpan.FromSeconds(30);
             });
         }
 
