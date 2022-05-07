@@ -11,6 +11,8 @@ services:
       - "ConnectionStrings:PromocodeFactoryAdministrationDb=Host=promocode-factory-administration-db;Database=promocode_factory_administration_db;Username=postgres;Password=docker"          
     depends_on: 
       - promocode-factory-administration-db
+      - rabbitmq-manager
+
   #Administration Db
   promocode-factory-administration-db:
     image: "postgres:9.6.17"
@@ -34,6 +36,7 @@ services:
       - "IntegrationSettings:AdministrationApiUrl=http://promocode-factory-administration-api"       
     depends_on: 
       - promocode-factory-receiving-from-partner-db
+
   #ReceivingFromPartner Db
   promocode-factory-receiving-from-partner-db:
     image: "postgres:9.6.17"
@@ -43,6 +46,8 @@ services:
       - 5434:5432
     environment: 
       - POSTGRES_PASSWORD=docker
+    depends_on: 
+      - rabbitmq-manager
   
   #GivingToCustomer Api
   promocode-factory-giving-to-customer-api:
@@ -55,6 +60,8 @@ services:
       - "ConnectionStrings:PromocodeFactoryGivingToCustomerDb=Host=promocode-factory-giving-to-customer-db;Database=promocode_factory_giving_to_customer_db;Username=postgres;Password=docker"          
     depends_on: 
       - promocode-factory-giving-to-customer-db
+      - rabbitmq-manager
+
   #GivingToCustomer Db
   promocode-factory-giving-to-customer-db:
     image: "postgres:9.6.17"
@@ -64,3 +71,10 @@ services:
       - 5435:5432
     environment: 
       - POSTGRES_PASSWORD=docker
+
+  rabbitmq-manager:
+    image: "rabbitmq:3.8-management"
+    container_name: 'rabbitmq-manager'
+    ports:
+      - 5672:5672
+      - 15672:15672

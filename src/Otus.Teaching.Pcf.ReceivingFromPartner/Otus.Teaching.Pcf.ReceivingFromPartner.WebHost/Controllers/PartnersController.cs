@@ -8,8 +8,12 @@ using Microsoft.AspNetCore.Mvc;
  using Otus.Teaching.Pcf.ReceivingFromPartner.Core.Abstractions.Repositories;
  using Otus.Teaching.Pcf.ReceivingFromPartner.Core.Domain;
  using Otus.Teaching.Pcf.ReceivingFromPartner.WebHost.Mappers;
+using MassTransit;
+using System.Threading;
+using Microsoft.Extensions.Configuration;
+using Otus.Teaching.Pcf.Common;
 
- namespace Otus.Teaching.Pcf.ReceivingFromPartner.WebHost.Controllers
+namespace Otus.Teaching.Pcf.ReceivingFromPartner.WebHost.Controllers
 {
     /// <summary>
     /// Партнеры
@@ -24,18 +28,24 @@ using Microsoft.AspNetCore.Mvc;
         private readonly INotificationGateway _notificationGateway;
         private readonly IGivingPromoCodeToCustomerGateway _givingPromoCodeToCustomerGateway;
         private readonly IAdministrationGateway _administrationGateway;
+        private readonly IBus _bus;
+        private readonly IConfiguration _configuration;
 
         public PartnersController(IRepository<Partner> partnersRepository,
             IRepository<Preference> preferencesRepository, 
             INotificationGateway notificationGateway,
             IGivingPromoCodeToCustomerGateway givingPromoCodeToCustomerGateway,
-            IAdministrationGateway administrationGateway)
+            IAdministrationGateway administrationGateway,
+            IConfiguration configuration,
+            IBus bus)
         {
             _partnersRepository = partnersRepository;
             _preferencesRepository = preferencesRepository;
             _notificationGateway = notificationGateway;
             _givingPromoCodeToCustomerGateway = givingPromoCodeToCustomerGateway;
             _administrationGateway = administrationGateway;
+            _bus = bus;
+            _configuration = configuration;
         }
 
         /// <summary>
@@ -327,19 +337,40 @@ using Microsoft.AspNetCore.Mvc;
             PromoCode promoCode = PromoCodeMapper.MapFromModel(request, preference, partner);
             partner.PromoCodes.Add(promoCode);
             partner.NumberIssuedPromoCodes++;
-
-            await _partnersRepository.UpdateAsync(partner);
             
-            //TODO: Чтобы информация о том, что промокод был выдан парнером была отправлена
-            //в микросервис рассылки клиентам нужно либо вызвать его API, либо отправить событие в очередь
-            await _givingPromoCodeToCustomerGateway.GivePromoCodeToCustomer(promoCode);
+            await _partnersRepository.UpdateAsync(partner);           
 
-            //TODO: Чтобы информация о том, что промокод был выдан парнером была отправлена
-            //в микросервис администрирования нужно либо вызвать его API, либо отправить событие в очередь
+            string promocodeQueue = _configuration.GetValue<string>("RabbitMQ:Queues:PromoCodeToCustomerGateway");
+            var promocodeEndpoint = await _bus.GetSendEndpoint(new Uri($"queue:{promocodeQueue}"));
+            if (promocodeEndpoint == null)
+            {
+                throw new Exception($"Не удалось найти очередь {promocodeQueue}");
+            }
+            var promocodeMessage = new GivePromoCodeToCustomerMessage()
+            {
+                PartnerId = promoCode.Partner.Id,
+                BeginDate = promoCode.BeginDate.ToShortDateString(),
+                EndDate = promoCode.EndDate.ToShortDateString(),
+                PreferenceId = promoCode.PreferenceId,
+                PromoCode = promoCode.Code,
+                ServiceInfo = promoCode.ServiceInfo,
+                PartnerManagerId = promoCode.PartnerManagerId
+            };
+            await promocodeEndpoint.Send(promocodeMessage, CancellationToken.None);
 
             if (request.PartnerManagerId.HasValue)
             {
-                await _administrationGateway.NotifyAdminAboutPartnerManagerPromoCode(request.PartnerManagerId.Value);   
+                string adminQueue = _configuration.GetValue<string>("RabbitMQ:Queues:administrationGateway");
+                var adminEndpoint = await _bus.GetSendEndpoint(new Uri($"queue:{adminQueue}"));
+                if (adminEndpoint == null)
+                {
+                    throw new Exception($"Не удалось найти очередь {adminQueue}");
+                }
+                var partnerMessage = new PartnerManagerIdMessage()
+                {
+                    PartnerManagerId = request.PartnerManagerId.Value
+                };
+                await adminEndpoint.Send(partnerMessage, CancellationToken.None);
             }
 
             return CreatedAtAction(nameof(GetPartnerPromoCodeAsync), 
