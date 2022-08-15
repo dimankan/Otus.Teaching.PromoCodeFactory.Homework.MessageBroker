@@ -297,7 +297,7 @@ namespace Otus.Teaching.Pcf.ReceivingFromPartner.WebHost.Controllers
         public async Task<IActionResult> ReceivePromoCodeFromPartnerWithPreferenceAsync(Guid id,
             ReceivingPromoCodeRequest request)
         {
-            // тестовый вызов для поверки консюмера
+            // тестовый вызов для проверки консюмера
             await _busControl.Publish(new PartnerManagerDto { Id = id });
 
             var partner = await _partnersRepository.GetByIdAsync(id);

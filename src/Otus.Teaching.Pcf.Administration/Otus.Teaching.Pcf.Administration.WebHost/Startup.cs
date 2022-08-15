@@ -18,6 +18,7 @@ using Otus.Teaching.Pcf.Administration.Core.Domain.Administration;
 using IConfiguration = Microsoft.Extensions.Configuration.IConfiguration;
 using MassTransit;
 using Otus.Teaching.Pcf.Administration.Infrastructure;
+using Otus.Teaching.Pcf.Administration.Core.Logic;
 
 namespace Otus.Teaching.Pcf.Administration.WebHost
 {
@@ -71,6 +72,8 @@ namespace Otus.Teaching.Pcf.Administration.WebHost
             });
 
             services.AddMassTransitHostedService();
+
+            services.AddTransient<IUpdateAppliedPromocodeService, UpdateAppliedPromocodeService>();
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.

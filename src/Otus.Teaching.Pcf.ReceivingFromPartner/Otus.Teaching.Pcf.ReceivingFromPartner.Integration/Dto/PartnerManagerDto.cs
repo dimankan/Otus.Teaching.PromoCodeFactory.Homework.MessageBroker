@@ -6,6 +6,7 @@ namespace Otus.Teaching.Pcf.ReceivingFromPartner.Integration.Dto
 {
     public class PartnerManagerDto
     {
+        /// <summary>id партнера</summary>
         public Guid Id { get; set; }
     }
 }

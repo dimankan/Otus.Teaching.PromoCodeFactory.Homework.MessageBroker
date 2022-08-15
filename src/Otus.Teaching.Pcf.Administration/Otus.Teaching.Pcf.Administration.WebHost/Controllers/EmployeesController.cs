@@ -6,6 +6,7 @@ using Microsoft.AspNetCore.Mvc;
 using Otus.Teaching.Pcf.Administration.WebHost.Models;
 using Otus.Teaching.Pcf.Administration.Core.Abstractions.Repositories;
 using Otus.Teaching.Pcf.Administration.Core.Domain.Administration;
+using Otus.Teaching.Pcf.Administration.Core.Logic;
 
 namespace Otus.Teaching.Pcf.Administration.WebHost.Controllers
 {
@@ -18,12 +19,14 @@ namespace Otus.Teaching.Pcf.Administration.WebHost.Controllers
         : ControllerBase
     {
         private readonly IRepository<Employee> _employeeRepository;
+        private readonly IUpdateAppliedPromocodeService _updateAppliedPromocodeService;
 
-        public EmployeesController(IRepository<Employee> employeeRepository)
+        public EmployeesController(IRepository<Employee> employeeRepository, IUpdateAppliedPromocodeService updateAppliedPromocodeService)
         {
             _employeeRepository = employeeRepository;
+            _updateAppliedPromocodeService = updateAppliedPromocodeService;
         }
-        
+
         /// <summary>
         /// Получить данные всех сотрудников
         /// </summary>
@@ -33,17 +36,17 @@ namespace Otus.Teaching.Pcf.Administration.WebHost.Controllers
         {
             var employees = await _employeeRepository.GetAllAsync();
 
-            var employeesModelList = employees.Select(x => 
+            var employeesModelList = employees.Select(x =>
                 new EmployeeShortResponse()
-                    {
-                        Id = x.Id,
-                        Email = x.Email,
-                        FullName = x.FullName,
-                    }).ToList();
+                {
+                    Id = x.Id,
+                    Email = x.Email,
+                    FullName = x.FullName,
+                }).ToList();
 
             return employeesModelList;
         }
-        
+
         /// <summary>
         /// Получить данные сотрудника по id
         /// </summary>
@@ -73,26 +76,19 @@ namespace Otus.Teaching.Pcf.Administration.WebHost.Controllers
 
             return employeeModel;
         }
-        
+
         /// <summary>
         /// Обновить количество выданных промокодов
         /// </summary>
         /// <param name="id">Id сотрудника, например <example>451533d5-d8d5-4a11-9c7b-eb9f14e1a32f</example></param>
         /// <returns></returns>
         [HttpPost("{id:guid}/appliedPromocodes")]
-        
+
         public async Task<IActionResult> UpdateAppliedPromocodesAsync(Guid id)
         {
-            var employee = await _employeeRepository.GetByIdAsync(id);
+            var result = await _updateAppliedPromocodeService.UpdateAppliedPromocodesAsync(id);
 
-            if (employee == null)
-                return NotFound();
-
-            employee.AppliedPromocodesCount++;
-
-            await _employeeRepository.UpdateAsync(employee);
-
-            return Ok();
+            return result;
         }
     }
 }
