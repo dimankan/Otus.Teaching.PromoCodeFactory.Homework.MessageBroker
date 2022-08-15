@@ -63,4 +63,16 @@ services:
     ports:
       - 5435:5432
     environment: 
-      - POSTGRES_PASSWORD=docker
+      - POSTGRES_PASSWORD=docker      
+  #rabbit
+  rabbit01:
+    image: "rabbitmq:3-management"
+    container_name: rabbit01
+    environment:
+      - RABBITMQ_ERLANG_COOKIE='secret_cookie'    
+    hostname: rabbit01    
+    ports:
+      - "15672:15672"
+      - "5672:5672" 
+   
+      
