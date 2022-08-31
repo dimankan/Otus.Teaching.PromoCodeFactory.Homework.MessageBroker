@@ -10,6 +10,7 @@ using Otus.Teaching.Pcf.ReceivingFromPartner.Core.Domain;
 using Otus.Teaching.Pcf.ReceivingFromPartner.WebHost.Mappers;
 using MassTransit;
 using Otus.Teaching.Pcf.ReceivingFromPartner.Integration.Dto;
+using Otus.Teaching.Pcf.ReceivingFromPartner.Dto;
 
 namespace Otus.Teaching.Pcf.ReceivingFromPartner.WebHost.Controllers
 {

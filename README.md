@@ -8,3 +8,5 @@ Cистема `Promocode Factory` для выдачи промокодов па�
 Данный проект является стартовой точкой для Homework №7
 
 Описание домашнего задания в [Wiki](https://gitlab.com/devgrav/otus.teaching.promocodefactory/-/wikis/Homework-7)
+
+docker-compose up promocode-factory-administration-db promocode-factory-receiving-from-partner-db promocode-factory-giving-to-customer-db rabbit01
