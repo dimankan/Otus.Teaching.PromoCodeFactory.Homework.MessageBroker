@@ -17,6 +17,7 @@ using Otus.Teaching.Pcf.ReceivingFromPartner.DataAccess.Data;
 using Otus.Teaching.Pcf.ReceivingFromPartner.DataAccess.Repositories;
 using Otus.Teaching.Pcf.ReceivingFromPartner.Integration;
 using IConfiguration = Microsoft.Extensions.Configuration.IConfiguration;
+using MassTransit;
 
 namespace Otus.Teaching.Pcf.ReceivingFromPartner.WebHost
 {
@@ -28,27 +29,38 @@ namespace Otus.Teaching.Pcf.ReceivingFromPartner.WebHost
         {
             Configuration = configuration;
         }
-        
+
         // This method gets called by the runtime. Use this method to add services to the container.
         // For more information on how to configure your application, visit https://go.microsoft.com/fwlink/?LinkID=398940
         public void ConfigureServices(IServiceCollection services)
         {
-            services.AddControllers().AddMvcOptions(x=> 
+            services.AddControllers().AddMvcOptions(x =>
                 x.SuppressAsyncSuffixInActionNames = false);
             services.AddScoped(typeof(IRepository<>), typeof(EfRepository<>));
             services.AddScoped<INotificationGateway, NotificationGateway>();
             services.AddScoped<IDbInitializer, EfDbInitializer>();
 
-            services.AddHttpClient<IGivingPromoCodeToCustomerGateway,GivingPromoCodeToCustomerGateway>(c =>
+            services.AddHttpClient<IGivingPromoCodeToCustomerGateway, GivingPromoCodeToCustomerGateway>(c =>
+             {
+                 c.BaseAddress = new Uri(Configuration["IntegrationSettings:GivingToCustomerApiUrl"]);
+             });
+
+            services.AddHttpClient<IAdministrationGateway, AdministrationGateway>(c =>
+             {
+                 c.BaseAddress = new Uri(Configuration["IntegrationSettings:AdministrationApiUrl"]);
+             });
+
+            services.AddMassTransit(x =>
             {
-                c.BaseAddress = new Uri(Configuration["IntegrationSettings:GivingToCustomerApiUrl"]);
+                x.UsingRabbitMq((context, cfg) =>
+                {
+                    var rabbitUrl = Configuration["IntegrationSettings:RabbitUrl"];
+
+                    cfg.Host(rabbitUrl);
+                });
+
             });
-            
-            services.AddHttpClient<IAdministrationGateway,AdministrationGateway>(c =>
-            {
-                c.BaseAddress = new Uri(Configuration["IntegrationSettings:AdministrationApiUrl"]);
-            });
-            
+
             services.AddDbContext<DataContext>(x =>
             {
                 //x.UseSqlite("Filename=PromocodeFactoryReceivingFromPartnerDb.sqlite");
@@ -81,7 +93,7 @@ namespace Otus.Teaching.Pcf.ReceivingFromPartner.WebHost
             {
                 x.DocExpansion = "list";
             });
-            
+
             app.UseHttpsRedirection();
 
             app.UseRouting();
@@ -90,7 +102,7 @@ namespace Otus.Teaching.Pcf.ReceivingFromPartner.WebHost
             {
                 endpoints.MapControllers();
             });
-            
+
             dbInitializer.InitializeDb();
         }
     }

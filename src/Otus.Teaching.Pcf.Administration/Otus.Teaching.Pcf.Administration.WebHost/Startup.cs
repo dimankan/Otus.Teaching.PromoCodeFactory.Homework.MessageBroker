@@ -16,6 +16,9 @@ using Otus.Teaching.Pcf.Administration.DataAccess.Data;
 using Otus.Teaching.Pcf.Administration.DataAccess.Repositories;
 using Otus.Teaching.Pcf.Administration.Core.Domain.Administration;
 using IConfiguration = Microsoft.Extensions.Configuration.IConfiguration;
+using MassTransit;
+using Otus.Teaching.Pcf.Administration.Infrastructure;
+using Otus.Teaching.Pcf.Administration.Core.Logic;
 
 namespace Otus.Teaching.Pcf.Administration.WebHost
 {
@@ -27,12 +30,12 @@ namespace Otus.Teaching.Pcf.Administration.WebHost
         {
             Configuration = configuration;
         }
-        
+
         // This method gets called by the runtime. Use this method to add services to the container.
         // For more information on how to configure your application, visit https://go.microsoft.com/fwlink/?LinkID=398940
         public void ConfigureServices(IServiceCollection services)
         {
-            services.AddControllers().AddMvcOptions(x=> 
+            services.AddControllers().AddMvcOptions(x =>
                 x.SuppressAsyncSuffixInActionNames = false);
             services.AddScoped(typeof(IRepository<>), typeof(EfRepository<>));
             services.AddScoped<IDbInitializer, EfDbInitializer>();
@@ -49,6 +52,28 @@ namespace Otus.Teaching.Pcf.Administration.WebHost
                 options.Title = "PromoCode Factory Administration API Doc";
                 options.Version = "1.0";
             });
+
+            services.AddMassTransit(x =>
+            {
+
+                x.AddConsumer<UpdateAppliedPromocodesConsumer>();
+
+                x.UsingRabbitMq((context, cfg) =>
+                {
+                    cfg.Host(Configuration["IntegrationSettings:RabbitUrl"]);
+
+                    cfg.ReceiveEndpoint("update-promocodes", e =>
+                    {
+                        e.ConfigureConsumer<UpdateAppliedPromocodesConsumer>(context);
+                    });
+
+
+                });
+            });
+
+            services.AddMassTransitHostedService();
+
+            services.AddTransient<IUpdateAppliedPromocodeService, UpdateAppliedPromocodeService>();
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
@@ -68,7 +93,7 @@ namespace Otus.Teaching.Pcf.Administration.WebHost
             {
                 x.DocExpansion = "list";
             });
-            
+
             app.UseHttpsRedirection();
 
             app.UseRouting();
@@ -77,7 +102,7 @@ namespace Otus.Teaching.Pcf.Administration.WebHost
             {
                 endpoints.MapControllers();
             });
-            
+
             dbInitializer.InitializeDb();
         }
     }
