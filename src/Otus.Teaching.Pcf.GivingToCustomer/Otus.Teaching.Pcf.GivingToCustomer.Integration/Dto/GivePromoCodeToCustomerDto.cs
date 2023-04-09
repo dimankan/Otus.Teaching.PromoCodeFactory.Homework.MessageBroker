@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 
 namespace Otus.Teaching.Pcf.Common.Dto
 {
@@ -18,6 +18,6 @@ namespace Otus.Teaching.Pcf.Common.Dto
 
         public string EndDate { get; set; }
         
-        public Guid? PartnerManagerId { get; set; }
+        public Guid PartnerManagerId { get; set; }
     }
 }

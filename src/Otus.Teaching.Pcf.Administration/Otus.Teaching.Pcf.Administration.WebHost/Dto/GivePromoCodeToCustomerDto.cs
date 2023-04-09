@@ -1,8 +1,8 @@
-﻿using System;
+using System;
 
-namespace Otus.Teaching.Pcf.GivingToCustomer.WebHost.Models
+namespace Otus.Teaching.Pcf.Common.Dto
 {
-    public class GivePromoCodeRequest
+    public class GivePromoCodeToCustomerDto
     {
         public string ServiceInfo { get; set; }
 
@@ -17,5 +17,7 @@ namespace Otus.Teaching.Pcf.GivingToCustomer.WebHost.Models
         public string BeginDate { get; set; }
 
         public string EndDate { get; set; }
+        
+        public Guid PartnerManagerId { get; set; }
     }
 }
