@@ -44,6 +44,7 @@ namespace Otus.Teaching.Pcf.GivingToCustomer.WebHost
                 x.UseNpgsql(Configuration.GetConnectionString("PromocodeFactoryGivingToCustomerDb"));
                 x.UseSnakeCaseNamingConvention();
                 x.UseLazyLoadingProxies();
+                AppContext.SetSwitch("Npgsql.EnableLegacyTimestampBehavior", true);
             });
 
             services.AddOpenApiDocument(options =>

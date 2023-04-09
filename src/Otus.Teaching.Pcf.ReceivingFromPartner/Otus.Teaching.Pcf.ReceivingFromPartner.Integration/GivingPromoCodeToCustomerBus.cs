@@ -1,8 +1,8 @@
 using System.Threading.Tasks;
 using MassTransit;
+using Otus.Teaching.Pcf.Common.Dto;
 using Otus.Teaching.Pcf.ReceivingFromPartner.Core.Abstractions.Gateways;
 using Otus.Teaching.Pcf.ReceivingFromPartner.Core.Domain;
-using Otus.Teaching.Pcf.ReceivingFromPartner.Integration.Dto;
 
 namespace Otus.Teaching.Pcf.ReceivingFromPartner.Integration;
 

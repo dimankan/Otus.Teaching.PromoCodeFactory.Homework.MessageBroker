@@ -64,3 +64,15 @@ services:
       - 5435:5432
     environment: 
       - POSTGRES_PASSWORD=docker
+  #RMQ
+  rmq:
+    image: rabbitmq:3.10.7-management
+    hostname: rabbitmq
+    restart: always
+    environment:
+      - RABBITMQ_DEFAULT_USER=rmuser
+      - RABBITMQ_DEFAULT_PASS=rmpassword
+    ports:
+      - 15672:15672
+      - 5672:5672
+  

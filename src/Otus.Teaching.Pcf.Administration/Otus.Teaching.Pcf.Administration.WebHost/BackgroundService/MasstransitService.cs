@@ -5,11 +5,11 @@ using Microsoft.Extensions.Hosting;
 
 namespace Otus.Teaching.Pcf.Administration.WebHost.BackgroundService;
 
-public class GivingPromoCodeToCustomerListener : IHostedService
+public class MasstransitService : IHostedService
 {
     private IBusControl _busControl;
 
-    public GivingPromoCodeToCustomerListener(IBusControl busControl)
+    public MasstransitService(IBusControl busControl)
     {
         _busControl = busControl;
     }
