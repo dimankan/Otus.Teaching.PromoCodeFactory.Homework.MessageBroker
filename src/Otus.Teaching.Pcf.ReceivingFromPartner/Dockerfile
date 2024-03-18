@@ -8,6 +8,7 @@ RUN for file in $(ls *.csproj); do mkdir -p ${file%.*} && mv $file ${file%.*}; d
 RUN dotnet restore
 
 # copy everything else and build app
+COPY ../Otus.Teaching.Pcf.Contracts/*.csproj .
 COPY . ./aspnetapp
 WORKDIR /app/aspnetapp
 RUN dotnet publish -c Release -o out
