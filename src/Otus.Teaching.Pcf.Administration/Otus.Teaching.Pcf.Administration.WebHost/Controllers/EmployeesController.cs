@@ -4,8 +4,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
 using Otus.Teaching.Pcf.Administration.WebHost.Models;
-using Otus.Teaching.Pcf.Administration.Core.Abstractions.Repositories;
-using Otus.Teaching.Pcf.Administration.Core.Domain.Administration;
+using Otus.Teaching.Pcf.Administration.Core.Employees;
 
 namespace Otus.Teaching.Pcf.Administration.WebHost.Controllers
 {
@@ -17,11 +16,11 @@ namespace Otus.Teaching.Pcf.Administration.WebHost.Controllers
     public class EmployeesController
         : ControllerBase
     {
-        private readonly IRepository<Employee> _employeeRepository;
+        private readonly IEmployeesManager _employeesManager;
 
-        public EmployeesController(IRepository<Employee> employeeRepository)
+        public EmployeesController(IEmployeesManager employeesManager)
         {
-            _employeeRepository = employeeRepository;
+            _employeesManager = employeesManager;
         }
         
         /// <summary>
@@ -31,7 +30,7 @@ namespace Otus.Teaching.Pcf.Administration.WebHost.Controllers
         [HttpGet]
         public async Task<List<EmployeeShortResponse>> GetEmployeesAsync()
         {
-            var employees = await _employeeRepository.GetAllAsync();
+            var employees = await _employeesManager.GetEmployeesAsync();
 
             var employeesModelList = employees.Select(x => 
                 new EmployeeShortResponse()
@@ -52,7 +51,7 @@ namespace Otus.Teaching.Pcf.Administration.WebHost.Controllers
         [HttpGet("{id:guid}")]
         public async Task<ActionResult<EmployeeResponse>> GetEmployeeByIdAsync(Guid id)
         {
-            var employee = await _employeeRepository.GetByIdAsync(id);
+            var employee = await _employeesManager.GetEmployeeByIdAsync(id);
 
             if (employee == null)
                 return NotFound();
@@ -83,14 +82,14 @@ namespace Otus.Teaching.Pcf.Administration.WebHost.Controllers
         
         public async Task<IActionResult> UpdateAppliedPromocodesAsync(Guid id)
         {
-            var employee = await _employeeRepository.GetByIdAsync(id);
-
-            if (employee == null)
+            try
+            {
+                await _employeesManager.UpdateAppliedPromocodesAsync(id);
+            }
+            catch(ArgumentException)
+            {
                 return NotFound();
-
-            employee.AppliedPromocodesCount++;
-
-            await _employeeRepository.UpdateAsync(employee);
+            }
 
             return Ok();
         }

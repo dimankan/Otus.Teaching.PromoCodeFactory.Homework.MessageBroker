@@ -17,6 +17,10 @@ using Otus.Teaching.Pcf.GivingToCustomer.DataAccess.Data;
 using Otus.Teaching.Pcf.GivingToCustomer.DataAccess.Repositories;
 using Otus.Teaching.Pcf.GivingToCustomer.Integration;
 using IConfiguration = Microsoft.Extensions.Configuration.IConfiguration;
+using Otus.Teaching.Pcf.GivingToCustomer.WebHost.Configuration;
+using MassTransit;
+using Otus.Teaching.Pcf.GivingToCustomer.Core.UseCases;
+using Otus.Teaching.Pcf.GivingToCustomer.WebHost.RabbitMqConsumers;
 
 namespace Otus.Teaching.Pcf.GivingToCustomer.WebHost
 {
@@ -36,6 +40,7 @@ namespace Otus.Teaching.Pcf.GivingToCustomer.WebHost
             services.AddControllers().AddMvcOptions(x=> 
                 x.SuppressAsyncSuffixInActionNames = false);
             services.AddScoped(typeof(IRepository<>), typeof(EfRepository<>));
+            services.AddScoped<IPromocodesManager, PromocodesManager>();
             services.AddScoped<INotificationGateway, NotificationGateway>();
             services.AddScoped<IDbInitializer, EfDbInitializer>();
             services.AddDbContext<DataContext>(x =>
@@ -51,6 +56,21 @@ namespace Otus.Teaching.Pcf.GivingToCustomer.WebHost
                 options.Title = "PromoCode Factory Giving To Customer API Doc";
                 options.Version = "1.0";
             });
+
+            var rabbitMqSettings = Configuration.GetSection(nameof(RabbitMqSettings)).Get<RabbitMqSettings>();
+            services.AddMassTransit(mt => mt.AddMassTransit(x => {
+
+                x.AddConsumer<GivePromoCodeToCustomerConsumer>();
+
+                x.UsingRabbitMq((cntxt, cfg) => {
+                    cfg.Host(rabbitMqSettings.Uri, "/", c => {
+                        c.Username(rabbitMqSettings.UserName);
+                        c.Password(rabbitMqSettings.Password);
+                    }); 
+                    cfg.ConfigureEndpoints(cntxt);
+                });
+            }));
+
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.

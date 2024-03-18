@@ -17,6 +17,8 @@ using Otus.Teaching.Pcf.ReceivingFromPartner.DataAccess.Data;
 using Otus.Teaching.Pcf.ReceivingFromPartner.DataAccess.Repositories;
 using Otus.Teaching.Pcf.ReceivingFromPartner.Integration;
 using IConfiguration = Microsoft.Extensions.Configuration.IConfiguration;
+using MassTransit;
+using Otus.Teaching.Pcf.ReceivingFromPartner.WebHost.Configuration;
 
 namespace Otus.Teaching.Pcf.ReceivingFromPartner.WebHost
 {
@@ -39,16 +41,21 @@ namespace Otus.Teaching.Pcf.ReceivingFromPartner.WebHost
             services.AddScoped<INotificationGateway, NotificationGateway>();
             services.AddScoped<IDbInitializer, EfDbInitializer>();
 
-            services.AddHttpClient<IGivingPromoCodeToCustomerGateway,GivingPromoCodeToCustomerGateway>(c =>
-            {
-                c.BaseAddress = new Uri(Configuration["IntegrationSettings:GivingToCustomerApiUrl"]);
-            });
-            
-            services.AddHttpClient<IAdministrationGateway,AdministrationGateway>(c =>
-            {
-                c.BaseAddress = new Uri(Configuration["IntegrationSettings:AdministrationApiUrl"]);
-            });
-            
+            //services.AddHttpClient<IGivingPromoCodeToCustomerGateway,GivingPromoCodeToCustomerGateway>(c =>
+            //{
+            //    c.BaseAddress = new Uri(Configuration["IntegrationSettings:GivingToCustomerApiUrl"]);
+            //});
+
+            services.AddScoped<IGivingPromoCodeToCustomerGateway, GivingPromoCodeToCustomerRabbitMqGateway>();
+
+            //services.AddHttpClient<IAdministrationGateway,AdministrationGateway>(c =>
+            //{
+            //    c.BaseAddress = new Uri(Configuration["IntegrationSettings:AdministrationApiUrl"]);
+            //});
+
+            services.AddScoped<IAdministrationGateway, AdministrationRabbitMqGateway>();
+
+
             services.AddDbContext<DataContext>(x =>
             {
                 //x.UseSqlite("Filename=PromocodeFactoryReceivingFromPartnerDb.sqlite");
@@ -62,6 +69,16 @@ namespace Otus.Teaching.Pcf.ReceivingFromPartner.WebHost
                 options.Title = "PromoCode Factory Receiving From Partner API Doc";
                 options.Version = "1.0";
             });
+
+            var rabbitMqSettings = Configuration.GetSection(nameof(RabbitMqSettings)).Get<RabbitMqSettings>();
+            services.AddMassTransit(mt => mt.AddMassTransit(x => {
+                x.UsingRabbitMq((cntxt, cfg) => {
+                    cfg.Host(rabbitMqSettings.Uri, "/", c => {
+                        c.Username(rabbitMqSettings.UserName);
+                        c.Password(rabbitMqSettings.Password);
+                    });
+                });
+            }));
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.

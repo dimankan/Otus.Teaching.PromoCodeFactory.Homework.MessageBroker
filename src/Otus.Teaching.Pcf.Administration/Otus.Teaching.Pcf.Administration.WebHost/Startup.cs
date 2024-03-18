@@ -16,6 +16,10 @@ using Otus.Teaching.Pcf.Administration.DataAccess.Data;
 using Otus.Teaching.Pcf.Administration.DataAccess.Repositories;
 using Otus.Teaching.Pcf.Administration.Core.Domain.Administration;
 using IConfiguration = Microsoft.Extensions.Configuration.IConfiguration;
+using Otus.Teaching.Pcf.Administration.WebHost.Configuration;
+using MassTransit;
+using Otus.Teaching.Pcf.Administration.WebHost.RabbitMqConsumers;
+using Otus.Teaching.Pcf.Administration.Core.Employees;
 
 namespace Otus.Teaching.Pcf.Administration.WebHost
 {
@@ -35,6 +39,7 @@ namespace Otus.Teaching.Pcf.Administration.WebHost
             services.AddControllers().AddMvcOptions(x=> 
                 x.SuppressAsyncSuffixInActionNames = false);
             services.AddScoped(typeof(IRepository<>), typeof(EfRepository<>));
+            services.AddScoped<IEmployeesManager, EmployeesManager>();
             services.AddScoped<IDbInitializer, EfDbInitializer>();
             services.AddDbContext<DataContext>(x =>
             {
@@ -49,6 +54,20 @@ namespace Otus.Teaching.Pcf.Administration.WebHost
                 options.Title = "PromoCode Factory Administration API Doc";
                 options.Version = "1.0";
             });
+
+            var rabbitMqSettings = Configuration.GetSection(nameof(RabbitMqSettings)).Get<RabbitMqSettings>();
+            services.AddMassTransit(mt => mt.AddMassTransit(x => {
+
+                x.AddConsumer<NotifyAdminAboutPartnerManagerPromoCodeConsumer>();
+
+                x.UsingRabbitMq((cntxt, cfg) => {
+                    cfg.Host(rabbitMqSettings.Uri, "/", c => {
+                        c.Username(rabbitMqSettings.UserName);
+                        c.Password(rabbitMqSettings.Password);
+                    });
+                    cfg.ConfigureEndpoints(cntxt);
+                });
+            }));
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
