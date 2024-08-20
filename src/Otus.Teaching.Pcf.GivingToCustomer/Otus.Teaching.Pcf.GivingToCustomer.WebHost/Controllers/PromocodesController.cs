@@ -1,12 +1,11 @@
-﻿using System;
+﻿using Microsoft.AspNetCore.Mvc;
+using Otus.Teaching.Pcf.GivingToCustomer.Core.Abstractions.Services;
+using Otus.Teaching.Pcf.GivingToCustomer.Core.Exceptions;
+using Otus.Teaching.Pcf.GivingToCustomer.WebHost.Mappers;
+using Otus.Teaching.Pcf.GivingToCustomer.WebHost.Models;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using Microsoft.AspNetCore.Mvc;
-using Otus.Teaching.Pcf.GivingToCustomer.Core.Abstractions.Repositories;
-using Otus.Teaching.Pcf.GivingToCustomer.Core.Domain;
-using Otus.Teaching.Pcf.GivingToCustomer.WebHost.Mappers;
-using Otus.Teaching.Pcf.GivingToCustomer.WebHost.Models;
 
 namespace Otus.Teaching.Pcf.GivingToCustomer.WebHost.Controllers
 {
@@ -18,16 +17,11 @@ namespace Otus.Teaching.Pcf.GivingToCustomer.WebHost.Controllers
     public class PromocodesController
         : ControllerBase
     {
-        private readonly IRepository<PromoCode> _promoCodesRepository;
-        private readonly IRepository<Preference> _preferencesRepository;
-        private readonly IRepository<Customer> _customersRepository;
+        private readonly IPromoCodesService _promoCodesService;
 
-        public PromocodesController(IRepository<PromoCode> promoCodesRepository, 
-            IRepository<Preference> preferencesRepository, IRepository<Customer> customersRepository)
+        public PromocodesController(IPromoCodesService promoCodesService)
         {
-            _promoCodesRepository = promoCodesRepository;
-            _preferencesRepository = preferencesRepository;
-            _customersRepository = customersRepository;
+            _promoCodesService = promoCodesService;
         }
         
         /// <summary>
@@ -37,21 +31,13 @@ namespace Otus.Teaching.Pcf.GivingToCustomer.WebHost.Controllers
         [HttpGet]
         public async Task<ActionResult<List<PromoCodeShortResponse>>> GetPromocodesAsync()
         {
-            var promocodes = await _promoCodesRepository.GetAllAsync();
+            var promocodes = await _promoCodesService.GetAllAsync();
 
-            var response = promocodes.Select(x => new PromoCodeShortResponse()
-            {
-                Id = x.Id,
-                Code = x.Code,
-                BeginDate = x.BeginDate.ToString("yyyy-MM-dd"),
-                EndDate = x.EndDate.ToString("yyyy-MM-dd"),
-                PartnerId = x.PartnerId,
-                ServiceInfo = x.ServiceInfo
-            }).ToList();
+            var response = promocodes.Select(PromoCodeMapper.MapToShortResponse);
 
             return Ok(response);
         }
-        
+
         /// <summary>
         /// Создать промокод и выдать его клиентам с указанным предпочтением
         /// </summary>
@@ -59,24 +45,17 @@ namespace Otus.Teaching.Pcf.GivingToCustomer.WebHost.Controllers
         [HttpPost]
         public async Task<IActionResult> GivePromoCodesToCustomersWithPreferenceAsync(GivePromoCodeRequest request)
         {
-            //Получаем предпочтение по имени
-            var preference = await _preferencesRepository.GetByIdAsync(request.PreferenceId);
-
-            if (preference == null)
+            try
             {
-                return BadRequest();
+                var promoCode = PromoCodeMapper.MapFromModel(request);
+                await _promoCodesService.GivePromoCodesToCustomersWithPreferenceAsync(promoCode);
+
+                return CreatedAtAction(nameof(GetPromocodesAsync), new { }, null);
             }
-
-            //  Получаем клиентов с этим предпочтением:
-            var customers = await _customersRepository
-                .GetWhere(d => d.Preferences.Any(x =>
-                    x.Preference.Id == preference.Id));
-
-            PromoCode promoCode = PromoCodeMapper.MapFromModel(request, preference, customers);
-
-            await _promoCodesRepository.AddAsync(promoCode);
-
-            return CreatedAtAction(nameof(GetPromocodesAsync), new { }, null);
+            catch(PreferenceNotFoundException ex)
+            {
+                return BadRequest(ex.Message);
+            }
         }
     }
 }

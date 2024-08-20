@@ -1,11 +1,12 @@
-﻿using System;
+﻿using Microsoft.AspNetCore.Mvc;
+using Otus.Teaching.Pcf.Administration.Core.Abstractions.Services;
+using Otus.Teaching.Pcf.Administration.Core.Exceptions;
+using Otus.Teaching.Pcf.Administration.WebHost.Mappers;
+using Otus.Teaching.Pcf.Administration.WebHost.Models;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using Microsoft.AspNetCore.Mvc;
-using Otus.Teaching.Pcf.Administration.WebHost.Models;
-using Otus.Teaching.Pcf.Administration.Core.Abstractions.Repositories;
-using Otus.Teaching.Pcf.Administration.Core.Domain.Administration;
 
 namespace Otus.Teaching.Pcf.Administration.WebHost.Controllers
 {
@@ -17,11 +18,11 @@ namespace Otus.Teaching.Pcf.Administration.WebHost.Controllers
     public class EmployeesController
         : ControllerBase
     {
-        private readonly IRepository<Employee> _employeeRepository;
+        private readonly IEmployeesService _employeesService;
 
-        public EmployeesController(IRepository<Employee> employeeRepository)
+        public EmployeesController(IEmployeesService employeesService)
         {
-            _employeeRepository = employeeRepository;
+            _employeesService = employeesService;
         }
         
         /// <summary>
@@ -31,15 +32,9 @@ namespace Otus.Teaching.Pcf.Administration.WebHost.Controllers
         [HttpGet]
         public async Task<List<EmployeeShortResponse>> GetEmployeesAsync()
         {
-            var employees = await _employeeRepository.GetAllAsync();
+            var employees = await _employeesService.GetAllAsync();
 
-            var employeesModelList = employees.Select(x => 
-                new EmployeeShortResponse()
-                    {
-                        Id = x.Id,
-                        Email = x.Email,
-                        FullName = x.FullName,
-                    }).ToList();
+            var employeesModelList = employees.Select(EmployeeMapper.MapToShortResponse).ToList();
 
             return employeesModelList;
         }
@@ -52,26 +47,12 @@ namespace Otus.Teaching.Pcf.Administration.WebHost.Controllers
         [HttpGet("{id:guid}")]
         public async Task<ActionResult<EmployeeResponse>> GetEmployeeByIdAsync(Guid id)
         {
-            var employee = await _employeeRepository.GetByIdAsync(id);
+            var employee = await _employeesService.GetByIdAsync(id);
 
             if (employee == null)
                 return NotFound();
 
-            var employeeModel = new EmployeeResponse()
-            {
-                Id = employee.Id,
-                Email = employee.Email,
-                Role = new RoleItemResponse()
-                {
-                    Id = employee.Id,
-                    Name = employee.Role.Name,
-                    Description = employee.Role.Description
-                },
-                FullName = employee.FullName,
-                AppliedPromocodesCount = employee.AppliedPromocodesCount
-            };
-
-            return employeeModel;
+            return EmployeeMapper.MapToResponse(employee);
         }
         
         /// <summary>
@@ -83,16 +64,17 @@ namespace Otus.Teaching.Pcf.Administration.WebHost.Controllers
         
         public async Task<IActionResult> UpdateAppliedPromocodesAsync(Guid id)
         {
-            var employee = await _employeeRepository.GetByIdAsync(id);
+            try
+            {
+                await _employeesService.UpdateAppliedPromocodesAsync(id);
 
-            if (employee == null)
+                return Ok();
+            }
+            catch(EmployeeNotFoundException)
+            {
                 return NotFound();
-
-            employee.AppliedPromocodesCount++;
-
-            await _employeeRepository.UpdateAsync(employee);
-
-            return Ok();
+            }
+            
         }
     }
 }

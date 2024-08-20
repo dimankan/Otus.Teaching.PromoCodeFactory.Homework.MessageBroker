@@ -40,5 +40,26 @@ using Otus.Teaching.Pcf.GivingToCustomer.WebHost.Models;
 
             return promocode;
         }
+
+        public static PromoCode MapFromModel(GivePromoCodeRequest request)
+            => new()
+            {
+                Id = request.PromoCodeId,
+                PartnerId = request.PartnerId,
+                Code = request.PromoCode,
+                ServiceInfo = request.ServiceInfo,
+                PreferenceId = request.PreferenceId
+            };
+
+        public static PromoCodeShortResponse MapToShortResponse(PromoCode entity)
+            => new()
+            {
+                Id = entity.Id,
+                Code = entity.Code,
+                BeginDate = entity.BeginDate.ToString("yyyy-MM-dd"),
+                EndDate = entity.EndDate.ToString("yyyy-MM-dd"),
+                PartnerId = entity.PartnerId,
+                ServiceInfo = entity.ServiceInfo
+            };
     }
 }

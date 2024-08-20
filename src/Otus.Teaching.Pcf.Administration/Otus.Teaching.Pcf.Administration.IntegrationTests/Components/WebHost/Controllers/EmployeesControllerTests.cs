@@ -1,7 +1,9 @@
 ﻿using System;
 using System.Threading.Tasks;
 using FluentAssertions;
+using Otus.Teaching.Pcf.Administration.Core.Abstractions.Services;
 using Otus.Teaching.Pcf.Administration.Core.Domain.Administration;
+using Otus.Teaching.Pcf.Administration.Core.Services;
 using Otus.Teaching.Pcf.Administration.DataAccess.Repositories;
 using Otus.Teaching.Pcf.Administration.WebHost.Controllers;
 using Xunit;
@@ -12,12 +14,14 @@ namespace Otus.Teaching.Pcf.Administration.IntegrationTests.Components.WebHost.C
     public class EmployeesControllerTests: IClassFixture<EfDatabaseFixture>
     {
         private EfRepository<Employee> _employeesRepository;
+        private IEmployeesService _employeesService;
         private EmployeesController _employeesController;
 
         public EmployeesControllerTests(EfDatabaseFixture efDatabaseFixture)
         {
             _employeesRepository = new EfRepository<Employee>(efDatabaseFixture.DbContext);
-            _employeesController = new EmployeesController(_employeesRepository);
+            _employeesService = new EmployeesService(_employeesRepository);
+            _employeesController = new EmployeesController(_employeesService);
         }
 
         [Fact]

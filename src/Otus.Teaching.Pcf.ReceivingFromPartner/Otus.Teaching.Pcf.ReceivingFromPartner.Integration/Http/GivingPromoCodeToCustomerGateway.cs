@@ -4,7 +4,7 @@ using Otus.Teaching.Pcf.ReceivingFromPartner.Core.Abstractions.Gateways;
 using Otus.Teaching.Pcf.ReceivingFromPartner.Core.Domain;
 using Otus.Teaching.Pcf.ReceivingFromPartner.Integration.Dto;
 
-namespace Otus.Teaching.Pcf.ReceivingFromPartner.Integration
+namespace Otus.Teaching.Pcf.ReceivingFromPartner.Integration.Http
 {
     public class GivingPromoCodeToCustomerGateway
         : IGivingPromoCodeToCustomerGateway
@@ -15,7 +15,7 @@ namespace Otus.Teaching.Pcf.ReceivingFromPartner.Integration
         {
             _httpClient = httpClient;
         }
-        
+
         public async Task GivePromoCodeToCustomer(PromoCode promoCode)
         {
             var dto = new GivePromoCodeToCustomerDto()
@@ -28,7 +28,7 @@ namespace Otus.Teaching.Pcf.ReceivingFromPartner.Integration
                 ServiceInfo = promoCode.ServiceInfo,
                 PartnerManagerId = promoCode.PartnerManagerId
             };
-            
+
             var response = await _httpClient.PostAsJsonAsync("api/v1/promocodes", dto);
 
             response.EnsureSuccessStatusCode();
